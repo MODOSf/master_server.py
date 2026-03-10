@@ -1,18 +1,16 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json, time
 
-servers = {}  # { "ip:port": { name, players, time } }
+servers = {}
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, *args): pass  # silence logs
+    def log_message(self, *args): pass
 
     def do_GET(self):
-        # Clean old servers (offline > 15 seconds)
         now = time.time()
         active = {k: v for k, v in servers.items() if now - v["time"] < 15}
         servers.clear()
         servers.update(active)
-
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
@@ -33,5 +31,6 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b"ok")
 
-print("Master server running on port 8000")
-HTTPServer(('0.0.0.0', 8000), Handler
+port = int(__import__('os').environ.get('PORT', 8000))
+print(f"Master server running on port {port}")
+HTTPServer(('0.0.0.0', port), Handler).serve_forever()
